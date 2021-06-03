@@ -18,143 +18,23 @@
 
 // Playback configuration
 // Replace this with your own Amazon IVS Playback URL
-const playbackUrlOld = 'https://fcc3ddae59ed.us-west-2.playback.live-video.net/api/video/v1/us-west-2.893648527354.channel.DmumNckWFTqz.m3u8';
+const playbackUrlOld = 'https://content.jwplatform.com/manifests/vM7nH0Kl.m3u8';
 const urlParams = new URLSearchParams(window.location.search);
 const playbackUrl = urlParams.get('key');
 
-// Initialize player
+if (IVSPlayer.isPlayerSupported) {
   const player = IVSPlayer.create();
-  player.attachHTMLVideoElement(videoPlayer);
+  player.attachHTMLVideoElement(document.getElementById('video-player'));
 
-  // Attach event listeners
-  player.addEventListener(PlayerState.PLAYING, function () {
-    console.log("Player State - PLAYING");
-  });
-  player.addEventListener(PlayerState.ENDED, function () {
-    console.log("Player State - ENDED");
-  });
-  player.addEventListener(PlayerState.READY, function () {
-    console.log("Player State - READY");
-  });
-  player.addEventListener(PlayerEventType.ERROR, function (err) {
-    console.warn("Player Event - ERROR:", err);
-  });
-
-  player.addEventListener(PlayerEventType.TEXT_METADATA_CUE, function (cue) {
-    const metadataText = cue.text;
-    const position = player.getPosition().toFixed(2);
-    console.log(
-      `Player Event - TEXT_METADATA_CUE: "${metadataText}". Observed ${position}s after playback started.`
-    );
-  });
-
-  // Setup stream and play
+  /**
+   * With setAutoplay, we don't need to call play() here to try and start the stream. One of three things will happen:
+   * - Autoplay with sound
+   * - Autoplay muted
+   * - Playback blocked
+   * If autoplay is muted or blocked, the viewer will need to manually interact with the video player in order to unmute or start playback.
+   * See https://developers.google.com/web/updates/2017/09/autoplay-policy-changes for more info on autoplaying video and best practices.
+   * */
   player.setAutoplay(true);
   player.load(playbackUrl);
-
-  // Setvolume
-  player.setVolume(1.0);
-
-  // Show/Hide player controls
-  playerOverlay.addEventListener(
-    "mouseover",
-    function (e) {
-      playerOverlay.classList.add("player--hover");
-    },
-    false
-  );
-  playerOverlay.addEventListener("mouseout", function (e) {
-    playerOverlay.classList.remove("player--hover");
-  });
-
-  // Controls events
-  // Play/Pause
-  btnPlay.addEventListener(
-    "click",
-    function (e) {
-      if (btnPlay.classList.contains("btn--play")) {
-        // change to pause
-        btnPlay.classList.remove("btn--play");
-        btnPlay.classList.add("btn--pause");
-        player.pause();
-      } else {
-        // change to play
-        btnPlay.classList.remove("btn--pause");
-        btnPlay.classList.add("btn--play");
-        player.play();
-      }
-    },
-    false
-  );
-
-  // Mute/Unmute
-  btnMute.addEventListener(
-    "click",
-    function (e) {
-      if (btnMute.classList.contains("btn--mute")) {
-        btnMute.classList.remove("btn--mute");
-        btnMute.classList.add("btn--unmute");
-        player.setMuted(1);
-      } else {
-        btnMute.classList.remove("btn--unmute");
-        btnMute.classList.add("btn--mute");
-        player.setMuted(0);
-      }
-    },
-    false
-  );
-
-  // Create Quality Options
-  let createQualityOptions = function (obj, i) {
-    let q = document.createElement("a");
-    let qText = document.createTextNode(obj.name);
-    settingsMenu.appendChild(q);
-    q.classList.add("settings-menu-item");
-    q.appendChild(qText);
-
-    q.addEventListener("click", (event) => {
-      player.setQuality(obj);
-      return false;
-    });
-  };
-
-  // Close Settings menu
-  let closeSettingsMenu = function () {
-    btnSettings.classList.remove("btn--settings-on");
-    btnSettings.classList.add("btn--settings-off");
-    settingsMenu.classList.remove("open");
-  };
-
-  // Settings
-  btnSettings.addEventListener(
-    "click",
-    function (e) {
-      let qualities = player.getQualities();
-      let currentQuality = player.getQuality();
-
-      // Empty Settings menu
-      while (settingsMenu.firstChild)
-        settingsMenu.removeChild(settingsMenu.firstChild);
-
-      if (btnSettings.classList.contains("btn--settings-off")) {
-        for (var i = 0; i < qualities.length; i++) {
-          createQualityOptions(qualities[i], i);
-        }
-        btnSettings.classList.remove("btn--settings-off");
-        btnSettings.classList.add("btn--settings-on");
-        settingsMenu.classList.add("open");
-      } else {
-        closeSettingsMenu();
-      }
-    },
-    false
-  );
-
-  // Close Settings menu if user clicks outside the player
-  window.addEventListener("click", function (e) {
-    if (playerOverlay.contains(e.target)) {
-    } else {
-      closeSettingsMenu();
-    }
-  });
-})(window.IVSPlayer);
+  setTimeout(() => { player.setMuted(false); }, 4000);
+}
